@@ -1,0 +1,57 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    TZ=Asia/Tokyo
+
+# LPIC-1 の学習で頻出するパッケージを一通り導入
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # 基本コマンド・エディタ
+    vim nano less man-db manpages manpages-ja bash-completion \
+    sudo curl wget git ca-certificates \
+    # ファイル/テキスト処理
+    tree file lsof psmisc procps coreutils findutils \
+    sed gawk grep diffutils patch \
+    # アーカイブ・圧縮
+    tar gzip bzip2 xz-utils zip unzip cpio \
+    # ネットワーク (LPIC-1 102 範囲)
+    iproute2 iputils-ping net-tools dnsutils \
+    netcat-openbsd traceroute tcpdump nmap \
+    openssh-client openssh-server rsync \
+    # ユーザ・権限・スケジューラ
+    cron at acl attr \
+    # ディスク・パーティション (擬似演習用)
+    parted gdisk fdisk dosfstools e2fsprogs xfsprogs \
+    quota lvm2 \
+    # シェル
+    zsh tcsh ksh \
+    # systemd & init 関連
+    systemd systemd-sysv \
+    # ログ
+    rsyslog logrotate \
+    # X 関連の知識用 (実体は動かさない)
+    x11-utils x11-xserver-utils xauth \
+    # 印刷 (LPIC-1 範囲)
+    cups-client \
+    # ローカライズ
+    locales tzdata \
+ && rm -rf /var/lib/apt/lists/*
+
+# ロケール (日本語マニュアル用)
+RUN locale-gen ja_JP.UTF-8 en_US.UTF-8
+
+# 学習用ユーザを作成 (パスワード: student, sudo 権限あり)
+RUN useradd -m -s /bin/bash -G sudo student \
+ && echo 'student:student' | chpasswd \
+ && echo 'root:root' | chpasswd \
+ && echo 'student ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# .bashrc にちょっとした学習補助
+RUN echo 'export PS1="\[\e[32m\][\u@\h \W]\$\[\e[0m\] "' >> /home/student/.bashrc \
+ && echo 'alias ll="ls -lah"' >> /home/student/.bashrc \
+ && echo 'echo "=== LPIC-1 Lab: Ubuntu 22.04 ==="' >> /home/student/.bashrc \
+ && echo 'echo "user: student (sudo OK) / pkg manager: apt, dpkg"' >> /home/student/.bashrc
+
+WORKDIR /home/student
+USER student
+CMD ["/bin/bash"]
