@@ -1,0 +1,72 @@
+name: lpic-lab
+
+# LPIC-1 学習用 Docker 環境
+# 3つのディストリビューションを並列で起動し、コマンドの違いを比較しながら学習できます。
+# 使い方:
+#   docker compose up -d              # すべて起動
+#   docker compose exec ubuntu  bash  # Ubuntu に入る
+#   docker compose exec rocky   bash  # Rocky Linux (RHEL系) に入る
+#   docker compose exec debian  bash  # Debian に入る
+#   docker compose down               # 停止 & 削除
+
+services:
+  ubuntu:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.ubuntu
+    container_name: lpic-ubuntu
+    hostname: ubuntu-lab
+    platform: linux/amd64
+    tty: true
+    stdin_open: true
+    # systemd の演習にはこの2行が必要 (LPIC-1 102 試験範囲)
+    privileged: true
+    cgroup: host
+    volumes:
+      - ./shared:/shared
+      - ubuntu-home:/home/student
+    networks:
+      - lpic-net
+
+  rocky:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.rocky
+    container_name: lpic-rocky
+    hostname: rocky-lab
+    platform: linux/amd64
+    tty: true
+    stdin_open: true
+    privileged: true
+    cgroup: host
+    volumes:
+      - ./shared:/shared
+      - rocky-home:/home/student
+    networks:
+      - lpic-net
+
+  debian:
+    build:
+      context: ./dockerfiles
+      dockerfile: Dockerfile.debian
+    container_name: lpic-debian
+    hostname: debian-lab
+    platform: linux/amd64
+    tty: true
+    stdin_open: true
+    privileged: true
+    cgroup: host
+    volumes:
+      - ./shared:/shared
+      - debian-home:/home/student
+    networks:
+      - lpic-net
+
+networks:
+  lpic-net:
+    driver: bridge
+
+volumes:
+  ubuntu-home:
+  rocky-home:
+  debian-home:
