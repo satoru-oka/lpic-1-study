@@ -1,0 +1,45 @@
+# 学習中の作業ファイル (ホスト ↔ コンテナ共有用ディレクトリ)
+shared/*
+!shared/.gitkeep
+
+# 個人メモ
+notes/
+*.private.md
+*.local.md
+TODO.local
+SCRATCH.md
+
+# 模擬試験の答え合わせなど自分用
+answers/
+*.answers.md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# エディタ
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+
+# Docker ビルドの一時生成物
+*.log
+*.pid
+docker-compose.override.yml
+
+# OS / その他
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Python の一時 (将来 Ansible や Python スクリプトを足す場合に備えて)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
