@@ -1,0 +1,79 @@
+FROM rockylinux:9
+
+ENV LANG=C.UTF-8 \
+    TZ=Asia/Tokyo
+
+# Rocky Linux 9 用 LPIC-1 学習イメージ
+# - EPEL と CRB (CodeReady Builder) を有効化してから入れる
+# - パッケージを役割ごとに分割し、どこで失敗したか特定しやすくする
+
+# 1) リポジトリ準備
+RUN dnf -y install dnf-plugins-core epel-release \
+ && dnf config-manager --set-enabled crb \
+ && dnf -y update \
+ && dnf clean all
+
+# 2) 基本コマンド・エディタ
+# - Rocky 9 はフル vim が `vim-enhanced`、素の `vim` ではない
+# - ベースイメージに `curl-minimal` が入っているので `curl` への置換に --allowerasing が必要
+RUN dnf -y install --allowerasing \
+    vim-enhanced nano less man-db man-pages bash-completion \
+    sudo curl wget git which \
+ && dnf clean all
+
+# 3) ファイル/テキスト処理
+# Rocky 9 ベースには coreutils-single が入っており coreutils と衝突するため --allowerasing
+RUN dnf -y install --allowerasing \
+    tree file lsof psmisc procps-ng coreutils findutils \
+    sed gawk grep diffutils patch \
+ && dnf clean all
+
+# 4) アーカイブ・圧縮
+RUN dnf -y install --allowerasing \
+    tar gzip bzip2 xz zip unzip cpio \
+ && dnf clean all
+
+# 5) ネットワーク
+RUN dnf -y install --allowerasing \
+    iproute iputils net-tools bind-utils \
+    nmap-ncat traceroute tcpdump nmap \
+    openssh-clients openssh-server rsync \
+ && dnf clean all
+
+# 6) スケジューラ・属性
+RUN dnf -y install --allowerasing \
+    cronie at acl attr \
+ && dnf clean all
+
+# 7) ディスク・FS (gdisk は EPEL, quota は CRB が必要なことがある)
+RUN dnf -y install --allowerasing \
+    parted gdisk util-linux dosfstools e2fsprogs xfsprogs \
+    quota lvm2 \
+ && dnf clean all
+
+# 8) シェル (ksh は Rocky 9 で取得困難な場合があるので --skip-broken で許容)
+RUN dnf -y install --skip-broken --allowerasing \
+    zsh tcsh ksh \
+ && dnf clean all
+
+# 9) systemd / ログ / 印刷 / ロケール
+RUN dnf -y install --allowerasing \
+    systemd rsyslog logrotate \
+    cups-client \
+    glibc-langpack-ja \
+ && dnf clean all
+
+# 学習用ユーザ
+RUN useradd -m -s /bin/bash -G wheel student \
+ && echo 'student:student' | chpasswd \
+ && echo 'root:root' | chpasswd \
+ && echo 'student ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN echo 'export PS1="\[\e[31m\][\u@\h \W]\$\[\e[0m\] "' >> /home/student/.bashrc \
+ && echo 'alias ll="ls -lah"' >> /home/student/.bashrc \
+ && echo 'echo "=== LPIC-1 Lab: Rocky Linux 9 (RHEL系) ==="' >> /home/student/.bashrc \
+ && echo 'echo "user: student (sudo OK) / pkg manager: dnf, yum, rpm"' >> /home/student/.bashrc
+
+WORKDIR /home/student
+USER student
+CMD ["/bin/bash"]
